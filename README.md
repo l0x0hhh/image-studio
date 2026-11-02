@@ -1,86 +1,78 @@
 # MUSE — AI 图像创作工作台
 
-一个无需构建、直接在浏览器运行的中转站图片模型前端。
+基于 React、TypeScript 和 Motion 的 BYOK（Bring Your Own Key）图像创作工具。每位访客填写自己的 Base URL 和 API Key，直接连接自己的 OpenAI 兼容中转站。
 
-当前已预置并实测以下配置：
+## 技术栈
 
-- Base URL：`https://test.token.xhalo.com.cn/v1`
-- 模型：`qwen-image-3.0`
-- 16:9 尺寸：`1664x928`
-- 接口允许浏览器跨域访问，可直接从网页生成
-- 示例结果：`qwen-product-illustration-20261101-010510.png`
+- React 19、Vite、TypeScript
+- Radix UI、Motion、Lucide Icons
+- 原生 CSS：深色/浅色主题、液态玻璃、响应式布局
+- GitHub + Netlify 静态自动部署
 
-首次打开后，只需在 **API 设置** 中填写自己的 Key 并保存。密钥没有写入项目源码。
+## 密钥与隐私
 
-## 启动
+- MUSE 不需要站主配置真实密钥，也没有共享上游密钥。
+- 用户的请求从浏览器直接发送到用户自己填写的中转站，不经过 MUSE 服务器。
+- API Key 默认只保存在 `sessionStorage`，关闭标签页后清除。
+- 用户主动勾选“记住 Key”后，才保存到该浏览器的 `localStorage`。
+- Base URL、主题和模型偏好属于非敏感配置，可保存在本地。
+- 真实 Key 不进入前端源码、GitHub 或 Netlify 环境变量。
 
-直接双击 `index.html`，或在当前目录启动静态服务：
+中转站必须允许网页来源的 CORS 请求。如果某个中转站不允许浏览器跨域，需要由该中转站开启 CORS，或由其运营者提供受控代理。
+
+## 本地运行
+
+需要 Node.js 20 或更高版本。
 
 ```bash
-python -m http.server 8080
+npm install
+npm run dev
 ```
 
-然后访问 <http://localhost:8080>。
+生产构建与预览：
 
-## 接口适配
+```bash
+npm run build
+npm run preview
+```
 
-在页面右上角打开 **API 设置**，填写中转站地址、Key 和模型 ID。
+## Netlify 部署
 
-### OpenAI Images API
+项目已包含 `netlify.toml`，关联 GitHub 仓库后会自动使用：
 
-- 协议选择：`OpenAI Images API`
-- Base URL：通常填写 `https://你的中转站/v1`
-- 文生图请求：`POST /v1/images/generations`
-- 参考图请求：`POST /v1/images/edits`
-- 支持返回 `data[].url` 或 `data[].b64_json`
+```text
+Build command: npm run build
+Publish directory: dist
+```
 
-### Chat Completions 图像模型
-
-- 协议选择：`Chat Completions（图像模型）`
-- 请求：`POST /v1/chat/completions`
-- 参考图以 OpenAI 多模态 `image_url` 格式发送
-- 可识别 `message.images`、多模态 content、Markdown 图片链接、Base64 等常见返回形式
-
-Base URL 也可以直接填写完整的 `/images/generations`、`/images/edits` 或 `/chat/completions` 地址。模型特有的参数可在“高级请求参数”中通过 JSON 添加。
+不需要配置任何 API Key 环境变量。每次 `git push` 后，Netlify 会自动构建和发布。
 
 ## 功能
 
 - 文生图与多参考图创作
-- 从中转站 `/models` 一键拉取、搜索并缓存可用模型，也支持手动输入模型 ID
-- 独立模型下拉列表，默认显示全部生图模型，可切换查看全部模型
-- 深色 / 浅色主题切换，自动保存主题偏好
-- 自定义比例、数量、质量、随机种子
-- 图片预览、下载、收藏和本次会话生成记录
-- API 连接测试（通过 `/models`，不消耗图片生成额度）
-- 配置保存在浏览器 `localStorage`
-- 桌面端与移动端响应式布局
+- 用户自定义 Base URL、API Key 和模型
+- `/models` 模型拉取、搜索与本地缓存
+- 调用用户自己的文本模型动态优化提示词
+- 画面比例、数量、质量和随机种子
+- 深色/浅色主题与偏好保存
+- Motion 弹簧动画、液态玻璃效果
+- 作品预览、收藏、下载和本次会话记录
 
-## 文件说明
+## 目录结构
 
 ```text
-image-studio/
-├── index.html                         # 页面结构
-├── styles.css                        # 样式、响应式布局和双主题
-├── app.js                            # 模型拉取、图片生成与交互逻辑
-├── qwen-product-illustration-*.png    # 首页示例图片
-├── netlify.toml                      # Netlify 静态部署配置
-├── .gitignore                        # Git 忽略规则
-└── README.md                         # 使用说明
+src/
+├── components/
+│   ├── Gallery.tsx           # 作品画廊、收藏、下载和预览
+│   ├── ModelPicker.tsx       # 可搜索模型菜单
+│   ├── PromptComposer.tsx    # 提示词、参考图和生成操作
+│   ├── SettingsDialog.tsx    # 用户接口配置弹窗
+│   └── SettingsPanel.tsx     # 生成参数面板
+├── hooks/useLocalStorage.ts  # 非敏感偏好持久化
+├── lib/api.ts                # 用户中转站直连客户端
+├── App.tsx                   # 页面与状态组合
+├── main.tsx                  # React 入口
+└── styles.css                # 双主题、液态玻璃与响应式样式
 ```
 
-## 部署到 Netlify
-
-1. 将 `image-studio` 目录初始化为 Git 仓库并推送到 GitHub。
-2. 在 Netlify 选择 **Add new project → Import an existing project → GitHub**。
-3. 选择对应仓库和 `main` 分支。
-4. 项目已包含 `netlify.toml`，无需填写构建命令，发布目录为项目根目录。
-5. 后续执行 `git push`，Netlify 会自动部署更新。
-
-API Key 只保存在访问者的浏览器中，不需要、也不应写入 GitHub 仓库或前端源码。
-
-## 注意
-
-1. 浏览器会直接请求中转站，因此中转站需要允许当前网页来源的 CORS 请求。
-2. API Key 仅保存在当前浏览器，但公共电脑上仍不建议保存密钥。
-3. 当前作品列表保存在页面会话中，刷新页面后不会保留；请及时下载需要保存的图片。
-4. 精选灵感使用 Unsplash 示例图片，首次加载需要网络。
+生成作品默认只保留在当前页面会话中，请及时下载。公共电脑上不要选择“记住 Key”。

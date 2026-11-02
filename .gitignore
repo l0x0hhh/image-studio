@@ -1,16 +1,16 @@
-# OS files
-.DS_Store
-Thumbs.db
-Desktop.ini
+node_modules/
+dist/
+.netlify/
 
-# Editor files
-.vscode/
-.idea/
-
-# Local environment files
 .env
 .env.*
 !.env.example
 
-# Netlify local files
-.netlify/
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+*.local
+*.log
